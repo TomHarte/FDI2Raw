@@ -62,7 +62,7 @@ struct fdi {
 	int rotation_speed;
 	int bit_rate;
 	int disk_type;
-	int write_protect;
+	bool write_protect;
 	int reversed_side;
 	int err;
 	uint8_t header[2048];
@@ -152,6 +152,7 @@ static void free_nodes (NODE *node)
 	}
 }
 
+/// @returns the 32-bit sign extended version of the 16-bit value in the low part of @c v.
 static uint32_t sign_extend16 (uint32_t v)
 {
 	if (v & 0x8000)
@@ -159,6 +160,7 @@ static uint32_t sign_extend16 (uint32_t v)
 	return v;
 }
 
+/// @returns the 32-bit sign extended version of the 8-bit value in the low part of @c v.
 static uint32_t sign_extend8 (uint32_t v)
 {
 	if (v & 0x80)
@@ -1838,12 +1840,12 @@ int fdi2raw_get_bit_rate (FDI *fdi)
 	return fdi->bit_rate;
 }
 
-int fdi2raw_get_type (FDI *fdi)
+FDI2RawDiskType fdi2raw_get_type (FDI *fdi)
 {
 	return fdi->disk_type;
 }
 
-int fdi2raw_get_write_protect (FDI *fdi)
+bool fdi2raw_get_write_protect (FDI *fdi)
 {
 	return fdi->write_protect;
 }
@@ -1891,7 +1893,7 @@ FDI *fdi2raw_header(FILE *f)
 	fdi->last_head = fdi->header[144];
 	fdi->disk_type = fdi->header[145];
 	fdi->rotation_speed = fdi->header[146] + 128;
-	fdi->write_protect = fdi->header[147] & 1;
+	fdi->write_protect = !!(fdi->header[147] & 1);
 	fdi->reversed_side = (fdi->header[147] & 4) ? 1 : 0;
 
 	offset = 512;
